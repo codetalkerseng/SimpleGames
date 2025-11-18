@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SMS/MMS Network Monitor</string>
+    <string name="notification_channel_name">Monitoring Service</string>
+    <string name="notification_channel_description">SMS/MMS and Network Monitoring</string>
+    <string name="vpn_service_running">VPN monitoring active</string>
+    <string name="sms_monitor_running">SMS/MMS monitoring active</string>
+    <string name="network_monitor_running">Network state monitoring active</string>
+</resources>
