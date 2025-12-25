@@ -4,6 +4,7 @@ node_modules/
 # Build outputs
 www/
 dist/
+.angular/
 
 # IDE
 .vscode/
