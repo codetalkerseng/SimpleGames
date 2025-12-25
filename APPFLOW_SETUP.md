@@ -83,9 +83,33 @@ const credentials = {
 4. **Add Secret: FIREBASE_PRIVATE_KEY**:
    - Click **Add Secret**
    - Name: `FIREBASE_PRIVATE_KEY`
-   - Value: Copy the `private_key` value from your JSON file
-     - **Important**: Include the `\n` escape sequences exactly as they appear
-     - It should look like: `-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkq...\n-----END PRIVATE KEY-----\n`
+   - Value: Copy the `private_key` value from your JSON file **EXACTLY as it appears**
+
+   **CRITICAL**: The private key in your JSON file contains `\n` characters (backslash-n). These are escape sequences representing newlines. You must copy them EXACTLY as shown, including the backslashes.
+
+   **Example of what it should look like when you copy it:**
+   ```
+   -----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC...\nYOUR_KEY_DATA_HERE...\n-----END PRIVATE KEY-----\n
+   ```
+
+   **Method 1 - Copy from JSON file** (Recommended):
+   - Open your downloaded JSON file in a text editor
+   - Find the `"private_key"` field
+   - Copy EVERYTHING between the quotes (including all `\n` sequences)
+   - Paste into AppFlow secret value
+
+   **Method 2 - Use command line** (if on Mac/Linux):
+   ```bash
+   # This prints the private_key value with \n visible
+   cat your-service-account.json | jq -r '.private_key'
+   # Copy the entire output and paste into AppFlow
+   ```
+
+   ⚠️ **Common Mistakes to Avoid:**
+   - Don't remove the `\n` sequences
+   - Don't convert `\n` to actual newlines (it should be backslash-n, not a line break)
+   - Don't add or remove quotes
+
    - Click **Save**
 
 5. **Add Variable: GOOGLE_APPLICATION_CREDENTIALS**:
@@ -143,21 +167,59 @@ After the build completes:
 
 ## Troubleshooting
 
+### "error:1E08010C:DECODER routines::unsupported" or "Failed to authenticate"
+
+This error occurs when the private key format is incorrect. The most common cause is improper newline handling.
+
+**Solution**:
+1. **Verify the FIREBASE_PRIVATE_KEY secret in AppFlow**:
+   - The value should contain literal `\n` sequences (backslash-n), NOT actual newlines
+   - It should be a single line like: `-----BEGIN PRIVATE KEY-----\nMIIEv...\n-----END PRIVATE KEY-----\n`
+   - NOT multiple lines like this:
+     ```
+     -----BEGIN PRIVATE KEY-----
+     MIIEv...
+     -----END PRIVATE KEY-----
+     ```
+
+2. **Re-copy the private_key from your JSON file**:
+   - Open the service account JSON file in a text editor (NOT a word processor)
+   - The `"private_key"` field should look like one long line with `\n` in it
+   - Copy the value between the quotes EXACTLY as shown
+   - Update the AppFlow secret with this exact value
+
+3. **Verify placeholders are updated**:
+   - Check the pre-build logs - if you see errors about placeholders, you need to update `gen-firebase-key-json.js`
+   - Replace `[YOUR_PRIVATE_KEY_ID]`, `[YOUR_CLIENT_EMAIL]`, and `[YOUR_CLIENT_ID]`
+
+4. **Test the key format**:
+   - The updated script now validates the key format and will show clear error messages
+   - Check the pre-build logs for validation errors
+
 ### "firebase-key.json not found"
 - Verify `FIREBASE_PRIVATE_KEY` secret is set in AppFlow environment
 - Check pre-build logs for errors in `gen-firebase-key-json.js`
+- Ensure the secret name is EXACTLY `FIREBASE_PRIVATE_KEY` (case-sensitive)
 
 ### "Permission denied" during deployment
 - Verify service account has **Firebase Hosting Admin** role
 - Check that `GOOGLE_APPLICATION_CREDENTIALS` variable is set
+- Ensure service account is enabled in Google Cloud Console
 
 ### "Module not found" errors
 - Ensure `firebase-tools` is in `devDependencies`
 - Verify `"type": "module"` is in `package.json`
+- Clear AppFlow cache and rebuild
 
 ### Build works but deployment doesn't run
 - Verify `CI_PLATFORM` is set to `web` in AppFlow
 - Check that post-build script runs in build logs
+- Ensure you selected a "Web" build (not iOS/Android)
+
+### Pre-build script fails with "Please update placeholders"
+- You need to edit `gen-firebase-key-json.js` in your repository
+- Replace `[YOUR_PRIVATE_KEY_ID]`, `[YOUR_CLIENT_EMAIL]`, and `[YOUR_CLIENT_ID]` with actual values
+- Commit and push the updated file
 
 ## Security Notes
 
