@@ -44,7 +44,9 @@
             [class.red]="card.color === 'red'"
             [class.black]="card.color === 'black'"
             [draggable]="true"
-            (dragstart)="onWasteCardDragStart($event)">
+            (dragstart)="onWasteCardDragStart($event)"
+            (dragend)="onDragEnd()"
+            (dblclick)="onWasteDoubleClick()">
             <div class="card-value">{{ getCardDisplay(card) }}</div>
             <div class="card-suit">{{ getSuitSymbol(card) }}</div>
           </div>
@@ -57,6 +59,7 @@
         <div
           *ngFor="let foundation of foundations; let i = index"
           class="card-slot foundation"
+          [class.valid-drop-zone]="isValidDropZone(foundation)"
           (dragover)="onDragOver($event)"
           (drop)="onDrop($event, foundation)">
           <div
@@ -79,10 +82,16 @@
       <div
         *ngFor="let pile of tableau; let pileIndex = index"
         class="tableau-pile"
+        [class.valid-drop-zone]="isValidDropZone(pile)"
         (dragover)="onDragOver($event)"
         (drop)="onDrop($event, pile)">
 
         <div class="empty-slot tableau-empty" *ngIf="pile.cards.length === 0">K</div>
+
+        <!-- Card count badge -->
+        <div class="card-count" *ngIf="pile.cards.length > 0">
+          {{ getCardCount(pile) }}
+        </div>
 
         <div
           *ngFor="let card of pile.cards; let cardIndex = index"
@@ -93,7 +102,9 @@
           [class.face-up]="card.faceUp"
           [style.top.px]="cardIndex * 25"
           [draggable]="card.faceUp"
-          (dragstart)="onDragStart($event, getCardsFromIndex(pile, cardIndex), pile)">
+          (dragstart)="onDragStart($event, getCardsFromIndex(pile, cardIndex), pile)"
+          (dragend)="onDragEnd()"
+          (dblclick)="onDoubleClick(card, pile)">
 
           <div *ngIf="card.faceUp">
             <div class="card-value">{{ getCardDisplay(card) }}</div>

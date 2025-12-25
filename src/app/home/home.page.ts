@@ -17,6 +17,7 @@ export class HomePage implements OnInit {
 
   draggedCards: Card[] = [];
   dragSource: Pile | null = null;
+  validDropZones: Set<Pile> = new Set();
 
   constructor(private solitaireService: SolitaireService) {}
 
@@ -53,6 +54,14 @@ export class HomePage implements OnInit {
     return this.solitaireService.getSuitSymbol(card.suit);
   }
 
+  getCardCount(pile: Pile): number {
+    return pile.cards.length;
+  }
+
+  isValidDropZone(pile: Pile): boolean {
+    return this.validDropZones.has(pile);
+  }
+
   onDragStart(event: DragEvent, cards: Card[], pile: Pile) {
     if (!cards[0].faceUp) {
       event.preventDefault();
@@ -62,6 +71,9 @@ export class HomePage implements OnInit {
     this.draggedCards = cards;
     this.dragSource = pile;
     event.dataTransfer!.effectAllowed = 'move';
+
+    // Calculate valid drop zones
+    this.updateValidDropZones();
   }
 
   onDragOver(event: DragEvent) {
@@ -76,8 +88,74 @@ export class HomePage implements OnInit {
       this.solitaireService.moveCards(this.draggedCards, this.dragSource, toPile);
     }
 
+    this.clearDragState();
+  }
+
+  onDragEnd() {
+    this.clearDragState();
+  }
+
+  private clearDragState() {
     this.draggedCards = [];
     this.dragSource = null;
+    this.validDropZones.clear();
+  }
+
+  private updateValidDropZones() {
+    this.validDropZones.clear();
+
+    if (this.draggedCards.length === 0) return;
+
+    const testCard = this.draggedCards[0];
+
+    // Check all tableau piles
+    for (const pile of this.tableau) {
+      if (pile !== this.dragSource && this.solitaireService.canMoveCard(testCard, pile)) {
+        this.validDropZones.add(pile);
+      }
+    }
+
+    // Check foundation piles (only for single cards)
+    if (this.draggedCards.length === 1) {
+      for (const pile of this.foundations) {
+        if (this.solitaireService.canMoveCard(testCard, pile)) {
+          this.validDropZones.add(pile);
+        }
+      }
+    }
+  }
+
+  onDoubleClick(card: Card, pile: Pile) {
+    if (!card.faceUp) return;
+
+    // Get all cards from this card to the end
+    const cardIndex = pile.cards.indexOf(card);
+    const cardsToMove = pile.cards.slice(cardIndex);
+
+    // Try to auto-move to foundation first (only for single cards)
+    if (cardsToMove.length === 1) {
+      for (const foundation of this.foundations) {
+        if (this.solitaireService.canMoveCard(card, foundation)) {
+          this.solitaireService.moveCards(cardsToMove, pile, foundation);
+          return;
+        }
+      }
+    }
+
+    // Try to move to any valid tableau pile
+    for (const tableau of this.tableau) {
+      if (tableau !== pile && this.solitaireService.canMoveCard(card, tableau)) {
+        this.solitaireService.moveCards(cardsToMove, pile, tableau);
+        return;
+      }
+    }
+  }
+
+  onWasteDoubleClick() {
+    const topCard = this.getTopWasteCard();
+    if (topCard) {
+      this.onDoubleClick(topCard, this.waste);
+    }
   }
 
   getCardsFromIndex(pile: Pile, index: number): Card[] {

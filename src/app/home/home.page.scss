@@ -42,6 +42,7 @@
   width: 80px;
   height: 112px;
   position: relative;
+  transition: all 0.2s ease;
 
   &.stock {
     cursor: pointer;
@@ -49,6 +50,34 @@
     &:active {
       transform: scale(0.95);
     }
+  }
+
+  &.valid-drop-zone {
+    .empty-slot {
+      border-color: #4caf50;
+      border-width: 3px;
+      background: rgba(76, 175, 80, 0.1);
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border: 3px solid #4caf50;
+      border-radius: 10px;
+      pointer-events: none;
+      animation: pulse 1s ease-in-out infinite;
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
   }
 }
 
@@ -65,10 +94,13 @@
   flex-direction: column;
   padding: 6px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  transition: transform 0.1s;
+  transition: transform 0.1s, box-shadow 0.1s;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
 
   &:active {
     cursor: grabbing;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   }
 
   &.red {
@@ -145,12 +177,37 @@
   position: relative;
 }
 
+.card-count {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: #2e7d32;
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  pointer-events: none;
+}
+
 .tableau-card {
   position: absolute;
   left: 0;
+  touch-action: none;
 
   &.face-up:hover {
     transform: translateY(-5px);
+  }
+
+  &.face-up:active {
+    transform: translateY(-3px) scale(1.05);
+    z-index: 999;
   }
 }
 
@@ -169,6 +226,14 @@
   .tableau-pile {
     width: 60px;
     min-height: 84px;
+  }
+
+  .card-count {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+    top: -8px;
+    right: -8px;
   }
 
   .tableau-card {
@@ -210,6 +275,14 @@
     min-height: 63px;
   }
 
+  .card-count {
+    width: 18px;
+    height: 18px;
+    font-size: 9px;
+    top: -6px;
+    right: -6px;
+  }
+
   .card {
     padding: 4px;
 
@@ -242,5 +315,20 @@
   .top-section {
     flex-direction: column;
     gap: 12px;
+  }
+}
+
+// Improve mobile touch targets
+@media (hover: none) and (pointer: coarse) {
+  .card.face-up {
+    &:hover {
+      transform: none;
+    }
+  }
+
+  .tableau-card.face-up {
+    &:hover {
+      transform: none;
+    }
   }
 }
