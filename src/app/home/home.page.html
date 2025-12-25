@@ -1,0 +1,107 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-title>Solitaire</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="newGame()">
+        <ion-icon slot="icon-only" name="refresh"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="game-container">
+    <!-- Score and Stats -->
+    <div class="stats-bar">
+      <div class="stat">
+        <ion-text color="medium">Moves:</ion-text>
+        <ion-text><strong>{{ moves }}</strong></ion-text>
+      </div>
+      <div class="stat">
+        <ion-text color="medium">Score:</ion-text>
+        <ion-text><strong>{{ score }}</strong></ion-text>
+      </div>
+    </div>
+
+    <!-- Top Section: Stock, Waste, and Foundations -->
+    <div class="top-section">
+      <div class="stock-waste">
+        <!-- Stock Pile -->
+        <div class="card-slot stock" (click)="drawCard()">
+          <div class="card card-back" *ngIf="stock.cards.length > 0">
+            <div class="card-pattern"></div>
+          </div>
+          <div class="empty-slot" *ngIf="stock.cards.length === 0">
+            <ion-icon name="refresh"></ion-icon>
+          </div>
+        </div>
+
+        <!-- Waste Pile -->
+        <div class="card-slot waste">
+          <div
+            *ngIf="getTopWasteCard() as card"
+            class="card"
+            [class.red]="card.color === 'red'"
+            [class.black]="card.color === 'black'"
+            [draggable]="true"
+            (dragstart)="onWasteCardDragStart($event)">
+            <div class="card-value">{{ getCardDisplay(card) }}</div>
+            <div class="card-suit">{{ getSuitSymbol(card) }}</div>
+          </div>
+          <div class="empty-slot" *ngIf="waste.cards.length === 0"></div>
+        </div>
+      </div>
+
+      <!-- Foundation Piles -->
+      <div class="foundations">
+        <div
+          *ngFor="let foundation of foundations; let i = index"
+          class="card-slot foundation"
+          (dragover)="onDragOver($event)"
+          (drop)="onDrop($event, foundation)">
+          <div
+            *ngIf="foundation.cards.length > 0"
+            class="card"
+            [class.red]="foundation.cards[foundation.cards.length - 1].color === 'red'"
+            [class.black]="foundation.cards[foundation.cards.length - 1].color === 'black'">
+            <div class="card-value">{{ getCardDisplay(foundation.cards[foundation.cards.length - 1]) }}</div>
+            <div class="card-suit">{{ getSuitSymbol(foundation.cards[foundation.cards.length - 1]) }}</div>
+          </div>
+          <div class="empty-slot foundation-empty" *ngIf="foundation.cards.length === 0">
+            A
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tableau -->
+    <div class="tableau">
+      <div
+        *ngFor="let pile of tableau; let pileIndex = index"
+        class="tableau-pile"
+        (dragover)="onDragOver($event)"
+        (drop)="onDrop($event, pile)">
+
+        <div class="empty-slot tableau-empty" *ngIf="pile.cards.length === 0">K</div>
+
+        <div
+          *ngFor="let card of pile.cards; let cardIndex = index"
+          class="card tableau-card"
+          [class.red]="card.color === 'red'"
+          [class.black]="card.color === 'black'"
+          [class.card-back]="!card.faceUp"
+          [class.face-up]="card.faceUp"
+          [style.top.px]="cardIndex * 25"
+          [draggable]="card.faceUp"
+          (dragstart)="onDragStart($event, getCardsFromIndex(pile, cardIndex), pile)">
+
+          <div *ngIf="card.faceUp">
+            <div class="card-value">{{ getCardDisplay(card) }}</div>
+            <div class="card-suit">{{ getSuitSymbol(card) }}</div>
+          </div>
+          <div *ngIf="!card.faceUp" class="card-pattern"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ion-content>
