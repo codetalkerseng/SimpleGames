@@ -21,6 +21,10 @@
         <ion-text color="medium">Score:</ion-text>
         <ion-text><strong>{{ score }}</strong></ion-text>
       </div>
+      <ion-button color="success" (click)="newGame()" size="small">
+        <ion-icon slot="start" name="refresh"></ion-icon>
+        New Game
+      </ion-button>
     </div>
 
     <!-- Top Section: Stock, Waste, and Foundations -->
@@ -33,6 +37,10 @@
           </div>
           <div class="empty-slot" *ngIf="stock.cards.length === 0">
             <ion-icon name="refresh"></ion-icon>
+          </div>
+          <!-- Stock count badge -->
+          <div class="card-count stock-count" *ngIf="stock.cards.length > 0">
+            {{ stock.cards.length }}
           </div>
         </div>
 
@@ -51,6 +59,10 @@
             <div class="card-suit">{{ getSuitSymbol(card) }}</div>
           </div>
           <div class="empty-slot" *ngIf="waste.cards.length === 0"></div>
+          <!-- Waste count badge -->
+          <div class="card-count waste-count" *ngIf="waste.cards.length > 0">
+            {{ waste.cards.length }}
+          </div>
         </div>
       </div>
 
