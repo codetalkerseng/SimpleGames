@@ -3,10 +3,13 @@
   "version": "0.0.1",
   "author": "Ionic Framework",
   "homepage": "https://ionicframework.com/",
+  "type": "module",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "prebuild": "if [ \"$CI_PLATFORM\" = \"web\" ]; then node ./gen-firebase-key-json.js; fi",
     "build": "ng build",
+    "postbuild": "if [ \"$CI_PLATFORM\" = \"web\" ]; then chmod +x ./web-deploy.sh && ./web-deploy.sh; fi",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
@@ -37,6 +40,7 @@
     "@capacitor/cli": "^6.0.0",
     "@ionic/angular-toolkit": "^11.0.1",
     "@types/node": "^20.12.7",
+    "firebase-tools": "^13.0.0",
     "typescript": "~5.4.5"
   }
 }

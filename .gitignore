@@ -24,6 +24,7 @@ npm-debug.log*
 # Firebase
 .firebase/
 firebase-debug.log
+firebase-key.json
 
 # Environment
 .env
