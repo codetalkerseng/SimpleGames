@@ -28,3 +28,8 @@ firebase-debug.log
 # Environment
 .env
 .env.local
+
+# Capacitor
+android/
+ios/
+.capacitor/
