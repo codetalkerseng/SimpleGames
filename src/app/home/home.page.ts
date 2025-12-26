@@ -9,6 +9,7 @@ import { Card, Pile } from '../models/card.model';
   styleUrls: ['home.page.scss'],
 })
 export class HomePage implements OnInit {
+  version = '1.0.0';
   tableau: Pile[] = [];
   foundations: Pile[] = [];
   stock: Pile = { cards: [], type: 'stock' };
@@ -188,11 +189,16 @@ export class HomePage implements OnInit {
 
   private checkForNoMoreMoves() {
     if (this.hasAnyValidMoves()) {
+      // Reset flag when moves are available again
+      this.hasShownNoMovesAlert = false;
       return;
     }
 
-    this.hasShownNoMovesAlert = true;
-    this.showNoMovesAlert();
+    // Only show alert once per stuck state
+    if (!this.hasShownNoMovesAlert) {
+      this.hasShownNoMovesAlert = true;
+      this.showNoMovesAlert();
+    }
   }
 
   private hasAnyValidMoves(): boolean {

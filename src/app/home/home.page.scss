@@ -7,6 +7,12 @@
   --badge-size: 24px;
 }
 
+.version {
+  font-size: 0.7em;
+  opacity: 0.7;
+  font-weight: normal;
+}
+
 .game-container {
   padding: 8px;
   max-width: 100%;
@@ -303,7 +309,7 @@
     gap: var(--card-spacing);
     flex-wrap: nowrap;
     justify-content: flex-start;
-    padding: 0 4px 4px 4px;
+    padding: 8px 4px 4px 4px;
   }
 
   .card {
@@ -346,7 +352,7 @@
 
   .tableau {
     gap: var(--card-spacing);
-    padding: 0 4px 4px 4px;
+    padding: 8px 4px 4px 4px;
   }
 
   .card {
