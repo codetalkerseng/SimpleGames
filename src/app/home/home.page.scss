@@ -300,12 +300,6 @@
     padding: 0 4px 4px 4px;
   }
 
-  .tableau-card {
-    &[style*="top"] {
-      top: var(--pile-offset) !important;
-    }
-  }
-
   .card {
     padding: 3px;
   }
@@ -347,12 +341,6 @@
   .tableau {
     gap: var(--card-spacing);
     padding: 0 4px 4px 4px;
-  }
-
-  .tableau-card {
-    &[style*="top"] {
-      top: var(--pile-offset) !important;
-    }
   }
 
   .card {
