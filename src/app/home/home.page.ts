@@ -9,7 +9,7 @@ import { Card, Pile } from '../models/card.model';
   styleUrls: ['home.page.scss'],
 })
 export class HomePage implements OnInit {
-  version = '1.0.1';
+  version = '1.0.2';
   tableau: Pile[] = [];
   foundations: Pile[] = [];
   stock: Pile = { cards: [], type: 'stock' };
@@ -22,7 +22,7 @@ export class HomePage implements OnInit {
   validDropZones: Set<Pile> = new Set();
   private hasShownNoMovesAlert = false;
   private stockRecycleCount = 0;
-  private lastMoveCountAtRecycle = 0;
+  private gameStateAtLastRecycle = '';
   hintSource: Pile | null = null;
   hintCard: Card | null = null;
   hintTarget: Pile | null = null;
@@ -67,7 +67,7 @@ export class HomePage implements OnInit {
   newGame() {
     this.hasShownNoMovesAlert = false;
     this.stockRecycleCount = 0;
-    this.lastMoveCountAtRecycle = 0;
+    this.gameStateAtLastRecycle = '';
     this.clearHint();
     this.solitaireService.newGame();
   }
@@ -79,19 +79,21 @@ export class HomePage implements OnInit {
     const isRecycling = this.stock.cards.length === 0 && this.waste.cards.length > 0;
 
     if (isRecycling) {
-      // If moves haven't changed since last recycle, increment counter
-      if (this.moves === this.lastMoveCountAtRecycle) {
+      const currentState = this.getGameStateHash();
+
+      // If game state hasn't changed since last recycle, increment counter
+      if (currentState === this.gameStateAtLastRecycle) {
         this.stockRecycleCount++;
 
-        // If recycled 2+ times without making moves, player is stuck in loop
+        // If recycled 2+ times with identical game state, player is stuck in loop
         if (this.stockRecycleCount >= 2) {
           this.checkForNoMoreMoves();
         }
       } else {
-        // Moves were made, reset counter
+        // Game state changed (real progress made), reset counter
         this.stockRecycleCount = 1;
       }
-      this.lastMoveCountAtRecycle = this.moves;
+      this.gameStateAtLastRecycle = currentState;
     }
 
     this.solitaireService.drawFromStock();
@@ -266,8 +268,33 @@ export class HomePage implements OnInit {
   }
 
   private findValidMove(): { source: Pile; card: Card; target: Pile } | null {
-    // Priority 1: Check if we can move any card to foundation
-    // Check waste first
+    // Priority 1: Moves that will flip a card (reveal face-down cards)
+    for (const pile of this.tableau) {
+      if (pile.cards.length > 0) {
+        const topCard = pile.cards[pile.cards.length - 1];
+        if (topCard.faceUp) {
+          // Check if moving this card will flip another
+          const willFlipCard = pile.cards.length >= 2 && !pile.cards[pile.cards.length - 2].faceUp;
+
+          if (willFlipCard) {
+            // Try to move to foundation first
+            for (const foundation of this.foundations) {
+              if (this.solitaireService.canMoveCard(topCard, foundation)) {
+                return { source: pile, card: topCard, target: foundation };
+              }
+            }
+            // Try to move to another tableau pile
+            for (const targetPile of this.tableau) {
+              if (targetPile !== pile && this.solitaireService.canMoveCard(topCard, targetPile)) {
+                return { source: pile, card: topCard, target: targetPile };
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Priority 2: Moves to foundations (building ace stacks)
     const wasteCard = this.getTopWasteCard();
     if (wasteCard) {
       for (const foundation of this.foundations) {
@@ -277,7 +304,6 @@ export class HomePage implements OnInit {
       }
     }
 
-    // Check tableau cards to foundation
     for (const pile of this.tableau) {
       if (pile.cards.length > 0) {
         const topCard = pile.cards[pile.cards.length - 1];
@@ -291,8 +317,20 @@ export class HomePage implements OnInit {
       }
     }
 
-    // Priority 2: Check tableau to tableau moves
-    // Check waste to tableau
+    // Priority 3: Moves that create empty tableau spots (for Kings)
+    for (const pile of this.tableau) {
+      if (pile.cards.length === 1 && pile.cards[0].faceUp) {
+        const card = pile.cards[0];
+        // Try to move this card to free up the spot
+        for (const targetPile of this.tableau) {
+          if (targetPile !== pile && this.solitaireService.canMoveCard(card, targetPile)) {
+            return { source: pile, card: card, target: targetPile };
+          }
+        }
+      }
+    }
+
+    // Priority 4: Other tableau to tableau moves (lower priority - might be circular)
     if (wasteCard) {
       for (const pile of this.tableau) {
         if (this.solitaireService.canMoveCard(wasteCard, pile)) {
@@ -301,23 +339,8 @@ export class HomePage implements OnInit {
       }
     }
 
-    // Check tableau to tableau
-    for (const sourcePile of this.tableau) {
-      for (let i = 0; i < sourcePile.cards.length; i++) {
-        const card = sourcePile.cards[i];
-        if (!card.faceUp) continue;
-
-        for (const targetPile of this.tableau) {
-          if (targetPile !== sourcePile && this.solitaireService.canMoveCard(card, targetPile)) {
-            return { source: sourcePile, card: card, target: targetPile };
-          }
-        }
-      }
-    }
-
-    // Priority 3: Draw from stock
+    // Priority 5: Draw from stock if available
     if (this.stock.cards.length > 0) {
-      // Return a hint to click the stock
       return null; // User should draw more cards
     }
 
@@ -356,6 +379,21 @@ export class HomePage implements OnInit {
         }
       }
     } while (movedAny);
+  }
+
+  private getGameStateHash(): string {
+    // Create a hash of the current game state to detect if real progress was made
+    // This includes: tableau card positions/face-up status, foundation counts, waste top card
+    const tableauState = this.tableau.map(pile =>
+      pile.cards.map(card => `${card.id}${card.faceUp ? 'U' : 'D'}`).join(',')
+    ).join('|');
+
+    const foundationState = this.foundations.map(pile => pile.cards.length).join(',');
+
+    const wasteTopCard = this.getTopWasteCard();
+    const wasteState = wasteTopCard ? wasteTopCard.id : 'empty';
+
+    return `${tableauState}::${foundationState}::${wasteState}`;
   }
 
   private checkForNoMoreMoves() {
