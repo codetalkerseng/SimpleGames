@@ -104,6 +104,25 @@
       animation: pulse 1s ease-in-out infinite;
     }
   }
+
+  &.hint-target {
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border: 3px solid #ffc107;
+      border-radius: 10px;
+      pointer-events: none;
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    .empty-slot {
+      border-color: #ffc107;
+      border-width: 3px;
+      background: rgba(255, 193, 7, 0.1);
+      animation: pulse 1s ease-in-out infinite;
+    }
+  }
 }
 
 @keyframes pulse {
@@ -112,6 +131,15 @@
   }
   50% {
     opacity: 0.6;
+  }
+}
+
+@keyframes hintPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7), 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 193, 7, 0), 0 4px 8px rgba(255, 193, 7, 0.4);
   }
 }
 
@@ -131,6 +159,13 @@
   transition: transform 0.1s, box-shadow 0.1s;
   touch-action: none;
   -webkit-tap-highlight-color: transparent;
+
+  &.hint-card {
+    border-color: #ffc107;
+    border-width: 3px;
+    animation: hintPulse 1.5s ease-in-out infinite;
+    z-index: 1000;
+  }
 
   &:active {
     cursor: grabbing;

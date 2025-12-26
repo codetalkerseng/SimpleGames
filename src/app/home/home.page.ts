@@ -9,7 +9,7 @@ import { Card, Pile } from '../models/card.model';
   styleUrls: ['home.page.scss'],
 })
 export class HomePage implements OnInit {
-  version = '1.0.0';
+  version = '1.0.1';
   tableau: Pile[] = [];
   foundations: Pile[] = [];
   stock: Pile = { cards: [], type: 'stock' };
@@ -21,6 +21,11 @@ export class HomePage implements OnInit {
   dragSource: Pile | null = null;
   validDropZones: Set<Pile> = new Set();
   private hasShownNoMovesAlert = false;
+  private stockRecycleCount = 0;
+  private lastMoveCountAtRecycle = 0;
+  hintSource: Pile | null = null;
+  hintCard: Card | null = null;
+  hintTarget: Pile | null = null;
 
   constructor(
     private solitaireService: SolitaireService,
@@ -36,25 +41,59 @@ export class HomePage implements OnInit {
       this.moves = state.moves;
       this.score = state.score;
 
+      // Clear hint on any state change
+      this.clearHint();
+
       if (this.solitaireService.isGameWon()) {
         setTimeout(() => {
           this.showWinAlert();
         }, 100);
-      } else if (state.moves > 0 && !this.hasShownNoMovesAlert) {
-        // Check for no more moves (but only after at least one move has been made)
+      } else {
+        // Try auto-cleanup if all cards are face-up
         setTimeout(() => {
-          this.checkForNoMoreMoves();
-        }, 300);
+          this.tryAutoCleanup();
+        }, 100);
+
+        // Check for no more moves (but only after at least one move has been made)
+        if (state.moves > 0 && !this.hasShownNoMovesAlert) {
+          setTimeout(() => {
+            this.checkForNoMoreMoves();
+          }, 300);
+        }
       }
     });
   }
 
   newGame() {
     this.hasShownNoMovesAlert = false;
+    this.stockRecycleCount = 0;
+    this.lastMoveCountAtRecycle = 0;
+    this.clearHint();
     this.solitaireService.newGame();
   }
 
   drawCard() {
+    this.clearHint();
+
+    // Track stock recycling for stuck detection
+    const isRecycling = this.stock.cards.length === 0 && this.waste.cards.length > 0;
+
+    if (isRecycling) {
+      // If moves haven't changed since last recycle, increment counter
+      if (this.moves === this.lastMoveCountAtRecycle) {
+        this.stockRecycleCount++;
+
+        // If recycled 2+ times without making moves, player is stuck in loop
+        if (this.stockRecycleCount >= 2) {
+          this.checkForNoMoreMoves();
+        }
+      } else {
+        // Moves were made, reset counter
+        this.stockRecycleCount = 1;
+      }
+      this.lastMoveCountAtRecycle = this.moves;
+    }
+
     this.solitaireService.drawFromStock();
   }
 
@@ -98,6 +137,8 @@ export class HomePage implements OnInit {
 
     if (this.draggedCards.length > 0 && this.dragSource) {
       this.solitaireService.moveCards(this.draggedCards, this.dragSource, toPile);
+      // Reset recycle counter when a move is made
+      this.stockRecycleCount = 0;
     }
 
     this.clearDragState();
@@ -149,6 +190,7 @@ export class HomePage implements OnInit {
       for (const foundation of this.foundations) {
         if (this.solitaireService.canMoveCard(card, foundation)) {
           this.solitaireService.moveCards(cardsToMove, pile, foundation);
+          this.stockRecycleCount = 0; // Reset recycle counter on successful move
           return;
         }
       }
@@ -158,6 +200,7 @@ export class HomePage implements OnInit {
     for (const tableau of this.tableau) {
       if (tableau !== pile && this.solitaireService.canMoveCard(card, tableau)) {
         this.solitaireService.moveCards(cardsToMove, pile, tableau);
+        this.stockRecycleCount = 0; // Reset recycle counter on successful move
         return;
       }
     }
@@ -185,6 +228,134 @@ export class HomePage implements OnInit {
     if (topCard) {
       this.onDragStart(event, [topCard], this.waste);
     }
+  }
+
+  showHint() {
+    this.clearHint();
+
+    // Try to find any valid move
+    const move = this.findValidMove();
+
+    if (move) {
+      this.hintSource = move.source;
+      this.hintCard = move.card;
+      this.hintTarget = move.target;
+
+      // Clear hint after 3 seconds
+      setTimeout(() => {
+        this.clearHint();
+      }, 3000);
+    } else {
+      // No valid moves
+      this.checkForNoMoreMoves();
+    }
+  }
+
+  clearHint() {
+    this.hintSource = null;
+    this.hintCard = null;
+    this.hintTarget = null;
+  }
+
+  isHintCard(card: Card, pile: Pile): boolean {
+    return this.hintCard === card && this.hintSource === pile;
+  }
+
+  isHintTarget(pile: Pile): boolean {
+    return this.hintTarget === pile;
+  }
+
+  private findValidMove(): { source: Pile; card: Card; target: Pile } | null {
+    // Priority 1: Check if we can move any card to foundation
+    // Check waste first
+    const wasteCard = this.getTopWasteCard();
+    if (wasteCard) {
+      for (const foundation of this.foundations) {
+        if (this.solitaireService.canMoveCard(wasteCard, foundation)) {
+          return { source: this.waste, card: wasteCard, target: foundation };
+        }
+      }
+    }
+
+    // Check tableau cards to foundation
+    for (const pile of this.tableau) {
+      if (pile.cards.length > 0) {
+        const topCard = pile.cards[pile.cards.length - 1];
+        if (topCard.faceUp) {
+          for (const foundation of this.foundations) {
+            if (this.solitaireService.canMoveCard(topCard, foundation)) {
+              return { source: pile, card: topCard, target: foundation };
+            }
+          }
+        }
+      }
+    }
+
+    // Priority 2: Check tableau to tableau moves
+    // Check waste to tableau
+    if (wasteCard) {
+      for (const pile of this.tableau) {
+        if (this.solitaireService.canMoveCard(wasteCard, pile)) {
+          return { source: this.waste, card: wasteCard, target: pile };
+        }
+      }
+    }
+
+    // Check tableau to tableau
+    for (const sourcePile of this.tableau) {
+      for (let i = 0; i < sourcePile.cards.length; i++) {
+        const card = sourcePile.cards[i];
+        if (!card.faceUp) continue;
+
+        for (const targetPile of this.tableau) {
+          if (targetPile !== sourcePile && this.solitaireService.canMoveCard(card, targetPile)) {
+            return { source: sourcePile, card: card, target: targetPile };
+          }
+        }
+      }
+    }
+
+    // Priority 3: Draw from stock
+    if (this.stock.cards.length > 0) {
+      // Return a hint to click the stock
+      return null; // User should draw more cards
+    }
+
+    return null;
+  }
+
+  tryAutoCleanup() {
+    // Check if all cards are face-up
+    const allFaceUp = this.tableau.every(pile =>
+      pile.cards.every(card => card.faceUp)
+    );
+
+    if (!allFaceUp || this.waste.cards.length > 0 || this.stock.cards.length > 0) {
+      return;
+    }
+
+    // Auto-move cards to foundations
+    let movedAny = false;
+    do {
+      movedAny = false;
+
+      // Try to move from tableau to foundations
+      for (const pile of this.tableau) {
+        if (pile.cards.length > 0) {
+          const topCard = pile.cards[pile.cards.length - 1];
+
+          for (const foundation of this.foundations) {
+            if (this.solitaireService.canMoveCard(topCard, foundation)) {
+              this.solitaireService.moveCards([topCard], pile, foundation);
+              movedAny = true;
+              break;
+            }
+          }
+
+          if (movedAny) break;
+        }
+      }
+    } while (movedAny);
   }
 
   private checkForNoMoreMoves() {

@@ -21,6 +21,10 @@
         <ion-text color="medium">Score:</ion-text>
         <ion-text><strong>{{ score }}</strong></ion-text>
       </div>
+      <ion-button color="warning" (click)="showHint()" size="small">
+        <ion-icon slot="start" name="bulb"></ion-icon>
+        Hint
+      </ion-button>
       <ion-button color="success" (click)="newGame()" size="small">
         <ion-icon slot="start" name="refresh"></ion-icon>
         New Game
@@ -45,12 +49,13 @@
         </div>
 
         <!-- Waste Pile -->
-        <div class="card-slot waste">
+        <div class="card-slot waste" [class.hint-target]="isHintTarget(waste)">
           <div
             *ngIf="getTopWasteCard() as card"
             class="card"
             [class.red]="card.color === 'red'"
             [class.black]="card.color === 'black'"
+            [class.hint-card]="isHintCard(card, waste)"
             [draggable]="true"
             (dragstart)="onWasteCardDragStart($event)"
             (dragend)="onDragEnd()"
@@ -72,6 +77,7 @@
           *ngFor="let foundation of foundations; let i = index"
           class="card-slot foundation"
           [class.valid-drop-zone]="isValidDropZone(foundation)"
+          [class.hint-target]="isHintTarget(foundation)"
           (dragover)="onDragOver($event)"
           (drop)="onDrop($event, foundation)">
           <div
@@ -95,6 +101,7 @@
         *ngFor="let pile of tableau; let pileIndex = index"
         class="tableau-pile"
         [class.valid-drop-zone]="isValidDropZone(pile)"
+        [class.hint-target]="isHintTarget(pile)"
         (dragover)="onDragOver($event)"
         (drop)="onDrop($event, pile)">
 
@@ -112,6 +119,7 @@
           [class.black]="card.color === 'black'"
           [class.card-back]="!card.faceUp"
           [class.face-up]="card.faceUp"
+          [class.hint-card]="isHintCard(card, pile)"
           [style.top]="'calc(var(--pile-offset) * ' + cardIndex + ')'"
           [draggable]="card.faceUp"
           (dragstart)="onDragStart($event, getCardsFromIndex(pile, cardIndex), pile)"
