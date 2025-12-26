@@ -1,56 +1,72 @@
+:host {
+  // CSS Custom Properties for responsive card sizing
+  --card-width: 80px;
+  --card-height: 112px;
+  --card-spacing: 16px;
+  --pile-offset: 25px;
+  --badge-size: 24px;
+}
+
 .game-container {
-  padding: 16px;
-  max-width: 1200px;
-  margin: 0 auto;
-  min-height: 100vh;
+  padding: 8px;
+  max-width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .stats-bar {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 24px;
-  margin-bottom: 20px;
-  padding: 12px;
+  gap: 16px;
+  margin-bottom: 8px;
+  padding: 8px;
   background: rgba(0, 0, 0, 0.05);
   border-radius: 8px;
   flex-wrap: wrap;
+  flex-shrink: 0;
 
   .stat {
     display: flex;
     gap: 8px;
     align-items: center;
+    font-size: 14px;
   }
 
   ion-button {
     margin: 0;
     --padding-start: 12px;
     --padding-end: 12px;
+    font-size: 13px;
   }
 }
 
 .top-section {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 32px;
-  gap: 16px;
+  margin-bottom: 8px;
+  gap: var(--card-spacing);
+  flex-shrink: 0;
 }
 
 .stock-waste {
   display: flex;
-  gap: 16px;
+  gap: var(--card-spacing);
 }
 
 .foundations {
   display: flex;
-  gap: 16px;
+  gap: var(--card-spacing);
 }
 
 .card-slot {
-  width: 80px;
-  height: 112px;
+  width: var(--card-width);
+  height: var(--card-height);
   position: relative;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 
   &.stock {
     cursor: pointer;
@@ -90,8 +106,8 @@
 }
 
 .card {
-  width: 80px;
-  height: 112px;
+  width: var(--card-width);
+  height: var(--card-height);
   border-radius: 8px;
   border: 2px solid #333;
   background: white;
@@ -120,13 +136,13 @@
   }
 
   .card-value {
-    font-size: 18px;
+    font-size: calc(var(--card-width) * 0.225);
     font-weight: bold;
     line-height: 1;
   }
 
   .card-suit {
-    font-size: 24px;
+    font-size: calc(var(--card-width) * 0.3);
     line-height: 1;
   }
 
@@ -149,8 +165,8 @@
 }
 
 .empty-slot {
-  width: 80px;
-  height: 112px;
+  width: var(--card-width);
+  height: var(--card-height);
   border: 2px dashed #ccc;
   border-radius: 8px;
   background: rgba(0, 0, 0, 0.02);
@@ -158,46 +174,51 @@
   align-items: center;
   justify-content: center;
   color: #999;
-  font-size: 32px;
+  font-size: calc(var(--card-width) * 0.4);
   font-weight: bold;
 
   ion-icon {
-    font-size: 32px;
+    font-size: calc(var(--card-width) * 0.4);
     color: #999;
   }
 
   &.foundation-empty,
   &.tableau-empty {
-    font-size: 24px;
+    font-size: calc(var(--card-width) * 0.3);
   }
 }
 
 .tableau {
   display: flex;
-  gap: 16px;
+  gap: var(--card-spacing);
   justify-content: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 8px;
 }
 
 .tableau-pile {
-  width: 80px;
-  min-height: 112px;
+  width: var(--card-width);
+  min-height: var(--card-height);
   position: relative;
+  flex-shrink: 0;
 }
 
 .card-count {
   position: absolute;
-  top: -10px;
-  right: -10px;
+  top: calc(var(--badge-size) * -0.4);
+  right: calc(var(--badge-size) * -0.4);
   background: #2e7d32;
   color: white;
   border-radius: 50%;
-  width: 24px;
-  height: 24px;
+  width: var(--badge-size);
+  height: var(--badge-size);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: calc(var(--badge-size) * 0.46);
   font-weight: bold;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   z-index: 1000;
@@ -227,72 +248,27 @@
   }
 }
 
-@media (max-width: 768px) {
+// Portrait mobile optimization
+@media (max-width: 768px) and (orientation: portrait) {
+  :host {
+    --card-width: clamp(35px, 11vw, 55px);
+    --card-height: calc(var(--card-width) * 1.4);
+    --card-spacing: clamp(4px, 1.5vw, 10px);
+    --pile-offset: calc(var(--card-width) * 0.28);
+    --badge-size: clamp(16px, 4vw, 20px);
+  }
+
   .game-container {
-    padding: 8px;
+    padding: 4px;
   }
 
   .stats-bar {
-    gap: 16px;
-
-    ion-button {
-      font-size: 12px;
-    }
-  }
-
-  .card-slot,
-  .card,
-  .empty-slot {
-    width: 60px;
-    height: 84px;
-  }
-
-  .tableau-pile {
-    width: 60px;
-    min-height: 84px;
-  }
-
-  .card-count {
-    width: 20px;
-    height: 20px;
-    font-size: 10px;
-    top: -8px;
-    right: -8px;
-  }
-
-  .tableau-card {
-    &[style*="top"] {
-      top: 18px !important;
-    }
-  }
-
-  .card {
-    .card-value {
-      font-size: 14px;
-    }
-
-    .card-suit {
-      font-size: 18px;
-    }
-  }
-
-  .foundations,
-  .stock-waste {
     gap: 8px;
-  }
-
-  .tableau {
-    gap: 8px;
-  }
-}
-
-@media (max-width: 480px) {
-  .stats-bar {
-    gap: 12px;
-    padding: 8px;
+    margin-bottom: 6px;
+    padding: 6px 4px;
 
     .stat {
-      font-size: 14px;
+      font-size: 12px;
     }
 
     ion-button {
@@ -302,58 +278,125 @@
     }
   }
 
-  .card-slot,
-  .card,
-  .empty-slot {
-    width: 45px;
-    height: 63px;
+  .top-section {
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 6px;
+    align-items: center;
   }
 
-  .tableau-pile {
-    width: 45px;
-    min-height: 63px;
+  .stock-waste {
+    gap: var(--card-spacing);
   }
 
-  .card-count {
-    width: 18px;
-    height: 18px;
-    font-size: 9px;
-    top: -6px;
-    right: -6px;
+  .foundations {
+    gap: var(--card-spacing);
+  }
+
+  .tableau {
+    gap: var(--card-spacing);
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    padding: 0 4px 4px 4px;
+  }
+
+  .tableau-card {
+    &[style*="top"] {
+      top: var(--pile-offset) !important;
+    }
+  }
+
+  .card {
+    padding: 3px;
+  }
+}
+
+// Landscape mobile optimization
+@media (max-width: 915px) and (orientation: landscape) {
+  :host {
+    --card-width: clamp(40px, 9vh, 65px);
+    --card-height: calc(var(--card-width) * 1.4);
+    --card-spacing: clamp(6px, 1.2vh, 12px);
+    --pile-offset: calc(var(--card-width) * 0.3);
+    --badge-size: clamp(16px, 3.5vh, 22px);
+  }
+
+  .game-container {
+    padding: 4px;
+  }
+
+  .stats-bar {
+    gap: 12px;
+    margin-bottom: 4px;
+    padding: 4px 8px;
+
+    .stat {
+      font-size: 12px;
+    }
+
+    ion-button {
+      font-size: 11px;
+    }
+  }
+
+  .top-section {
+    margin-bottom: 6px;
+    gap: var(--card-spacing);
+  }
+
+  .tableau {
+    gap: var(--card-spacing);
+    padding: 0 4px 4px 4px;
+  }
+
+  .tableau-card {
+    &[style*="top"] {
+      top: var(--pile-offset) !important;
+    }
   }
 
   .card {
     padding: 4px;
+  }
+}
 
-    .card-value {
-      font-size: 11px;
-    }
-
-    .card-suit {
-      font-size: 14px;
-    }
+// Tablet and larger screens
+@media (min-width: 768px) {
+  :host {
+    --card-width: 80px;
+    --card-height: 112px;
+    --card-spacing: 16px;
+    --pile-offset: 25px;
+    --badge-size: 24px;
   }
 
-  .empty-slot {
-    font-size: 18px;
-
-    ion-icon {
-      font-size: 20px;
-    }
+  .game-container {
+    padding: 16px;
+    max-width: 1200px;
+    margin: 0 auto;
   }
 
-  .foundations,
-  .stock-waste {
-    gap: 4px;
-  }
-
-  .tableau {
-    gap: 4px;
+  .stats-bar {
+    gap: 24px;
+    margin-bottom: 20px;
+    padding: 12px;
   }
 
   .top-section {
-    flex-direction: column;
-    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .tableau {
+    flex-wrap: wrap;
+  }
+}
+
+// Desktop and very large screens
+@media (min-width: 1200px) {
+  :host {
+    --card-width: 90px;
+    --card-height: 126px;
+    --pile-offset: 28px;
   }
 }
 

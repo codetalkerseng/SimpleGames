@@ -112,7 +112,7 @@
           [class.black]="card.color === 'black'"
           [class.card-back]="!card.faceUp"
           [class.face-up]="card.faceUp"
-          [style.top.px]="cardIndex * 25"
+          [style.top]="'calc(var(--pile-offset) * ' + cardIndex + ')'"
           [draggable]="card.faceUp"
           (dragstart)="onDragStart($event, getCardsFromIndex(pile, cardIndex), pile)"
           (dragend)="onDragEnd()"
