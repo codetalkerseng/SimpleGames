@@ -49,16 +49,19 @@
   margin-bottom: 8px;
   gap: var(--card-spacing);
   flex-shrink: 0;
+  overflow: visible;
 }
 
 .stock-waste {
   display: flex;
   gap: var(--card-spacing);
+  overflow: visible;
 }
 
 .foundations {
   display: flex;
   gap: var(--card-spacing);
+  overflow: visible;
 }
 
 .card-slot {
@@ -67,6 +70,7 @@
   position: relative;
   transition: all 0.2s ease;
   flex-shrink: 0;
+  overflow: visible;
 
   &.stock {
     cursor: pointer;
@@ -204,6 +208,7 @@
   min-height: var(--card-height);
   position: relative;
   flex-shrink: 0;
+  overflow: visible;
 }
 
 .card-count {

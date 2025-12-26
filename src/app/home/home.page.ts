@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { AlertController } from '@ionic/angular';
 import { SolitaireService } from '../services/solitaire.service';
 import { Card, Pile } from '../models/card.model';
 
@@ -18,8 +19,12 @@ export class HomePage implements OnInit {
   draggedCards: Card[] = [];
   dragSource: Pile | null = null;
   validDropZones: Set<Pile> = new Set();
+  private hasShownNoMovesAlert = false;
 
-  constructor(private solitaireService: SolitaireService) {}
+  constructor(
+    private solitaireService: SolitaireService,
+    private alertController: AlertController
+  ) {}
 
   ngOnInit() {
     this.solitaireService.getGameState().subscribe(state => {
@@ -32,13 +37,19 @@ export class HomePage implements OnInit {
 
       if (this.solitaireService.isGameWon()) {
         setTimeout(() => {
-          alert('Congratulations! You won! 🎉');
+          this.showWinAlert();
         }, 100);
+      } else if (state.moves > 0 && !this.hasShownNoMovesAlert) {
+        // Check for no more moves (but only after at least one move has been made)
+        setTimeout(() => {
+          this.checkForNoMoreMoves();
+        }, 300);
       }
     });
   }
 
   newGame() {
+    this.hasShownNoMovesAlert = false;
     this.solitaireService.newGame();
   }
 
@@ -173,5 +184,105 @@ export class HomePage implements OnInit {
     if (topCard) {
       this.onDragStart(event, [topCard], this.waste);
     }
+  }
+
+  private checkForNoMoreMoves() {
+    if (this.hasAnyValidMoves()) {
+      return;
+    }
+
+    this.hasShownNoMovesAlert = true;
+    this.showNoMovesAlert();
+  }
+
+  private hasAnyValidMoves(): boolean {
+    // Check if stock has cards to draw
+    if (this.stock.cards.length > 0) {
+      return true;
+    }
+
+    // Check if waste can be recycled (stock is empty but waste has cards)
+    if (this.stock.cards.length === 0 && this.waste.cards.length > 0) {
+      return true;
+    }
+
+    // Check if any waste card can move
+    const wasteCard = this.getTopWasteCard();
+    if (wasteCard) {
+      // Check foundations
+      for (const foundation of this.foundations) {
+        if (this.solitaireService.canMoveCard(wasteCard, foundation)) {
+          return true;
+        }
+      }
+      // Check tableau
+      for (const pile of this.tableau) {
+        if (this.solitaireService.canMoveCard(wasteCard, pile)) {
+          return true;
+        }
+      }
+    }
+
+    // Check if any tableau card can move
+    for (const sourcePile of this.tableau) {
+      for (let i = 0; i < sourcePile.cards.length; i++) {
+        const card = sourcePile.cards[i];
+        if (!card.faceUp) continue;
+
+        // Check foundations (only single cards)
+        for (const foundation of this.foundations) {
+          if (this.solitaireService.canMoveCard(card, foundation)) {
+            return true;
+          }
+        }
+
+        // Check other tableau piles
+        for (const targetPile of this.tableau) {
+          if (targetPile !== sourcePile && this.solitaireService.canMoveCard(card, targetPile)) {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false;
+  }
+
+  private async showWinAlert() {
+    const alert = await this.alertController.create({
+      header: 'Congratulations!',
+      message: 'You won! 🎉',
+      buttons: [
+        {
+          text: 'New Game',
+          handler: () => {
+            this.newGame();
+          }
+        }
+      ]
+    });
+
+    await alert.present();
+  }
+
+  private async showNoMovesAlert() {
+    const alert = await this.alertController.create({
+      header: 'No More Moves',
+      message: 'There are no more valid moves available. Would you like to start a new game?',
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        },
+        {
+          text: 'New Game',
+          handler: () => {
+            this.newGame();
+          }
+        }
+      ]
+    });
+
+    await alert.present();
   }
 }
