@@ -20,6 +20,7 @@
   display: flex;
   flex-direction: column;
   overflow: visible;
+  -webkit-overflow-scrolling: touch; // Safari smooth scrolling
 }
 
 .stats-bar {
@@ -243,6 +244,8 @@
   overflow-y: visible;
   padding-bottom: 8px;
   padding-top: 8px;
+  -webkit-overflow-scrolling: touch; // Safari smooth scrolling
+  min-height: 0; // Safari flexbox fix
 }
 
 .tableau-pile {
@@ -355,43 +358,62 @@
 // Landscape mobile optimization
 @media (max-width: 915px) and (orientation: landscape) {
   :host {
-    --card-width: clamp(40px, 9vh, 65px);
+    --card-width: clamp(35px, 8vh, 55px);
     --card-height: calc(var(--card-width) * 1.4);
-    --card-spacing: clamp(6px, 1.2vh, 12px);
-    --pile-offset: calc(var(--card-width) * 0.3);
-    --badge-size: clamp(16px, 3.5vh, 22px);
+    --card-spacing: clamp(4px, 1vh, 8px);
+    --pile-offset: calc(var(--card-width) * 0.25);
+    --badge-size: clamp(14px, 3vh, 18px);
+  }
+
+  ion-header {
+    display: none !important;
+  }
+
+  ion-content {
+    --overflow: auto;
   }
 
   .game-container {
-    padding: 4px;
+    padding: 2px;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
   }
 
   .stats-bar {
-    gap: 12px;
-    margin-bottom: 4px;
-    padding: 4px 8px;
+    gap: 6px;
+    margin-bottom: 2px;
+    padding: 2px 4px;
+    font-size: 10px;
 
     .stat {
-      font-size: 12px;
+      font-size: 10px;
+      gap: 4px;
     }
 
     ion-button {
-      font-size: 11px;
+      font-size: 9px;
+      --padding-start: 6px;
+      --padding-end: 6px;
+      height: 24px;
     }
   }
 
   .top-section {
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     gap: var(--card-spacing);
   }
 
   .tableau {
     gap: var(--card-spacing);
-    padding: 8px 4px 4px 4px;
+    padding: 4px 2px 2px 2px;
+    overflow-y: auto;
+    max-height: calc(100vh - 140px);
   }
 
   .card {
-    padding: 4px;
+    padding: 2px;
   }
 }
 

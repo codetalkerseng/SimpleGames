@@ -9,7 +9,7 @@ import { Card, Pile } from '../models/card.model';
   styleUrls: ['home.page.scss'],
 })
 export class HomePage implements OnInit {
-  version = '1.0.2';
+  version = '1.0.3';
   tableau: Pile[] = [];
   foundations: Pile[] = [];
   stock: Pile = { cards: [], type: 'stock' };
