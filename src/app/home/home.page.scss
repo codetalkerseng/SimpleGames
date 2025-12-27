@@ -471,3 +471,38 @@
     }
   }
 }
+
+// Dark theme overrides
+:host-context(body.dark-theme) {
+  .game-container {
+    background: #1a1a1a;
+  }
+
+  .stats-bar {
+    background: rgba(255, 255, 255, 0.05);
+    color: #e0e0e0;
+  }
+
+  .card {
+    background: #f5f5f5;
+    border-color: #555;
+
+    &.card-back {
+      background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+    }
+  }
+
+  .empty-slot {
+    border-color: #555;
+    background: rgba(255, 255, 255, 0.03);
+    color: #888;
+
+    ion-icon {
+      color: #888;
+    }
+  }
+
+  .card-count {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  }
+}

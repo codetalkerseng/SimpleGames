@@ -9,13 +9,14 @@ import { Card, Pile } from '../models/card.model';
   styleUrls: ['home.page.scss'],
 })
 export class HomePage implements OnInit {
-  version = '1.0.3';
+  version = '1.1.0';
   tableau: Pile[] = [];
   foundations: Pile[] = [];
   stock: Pile = { cards: [], type: 'stock' };
   waste: Pile = { cards: [], type: 'waste' };
   moves = 0;
   score = 0;
+  isDarkMode = false;
 
   draggedCards: Card[] = [];
   dragSource: Pile | null = null;
@@ -33,6 +34,11 @@ export class HomePage implements OnInit {
   ) {}
 
   ngOnInit() {
+    // Load dark mode preference
+    const savedTheme = localStorage.getItem('solitaire-theme');
+    this.isDarkMode = savedTheme === 'dark';
+    this.applyTheme();
+
     this.solitaireService.getGameState().subscribe(state => {
       this.tableau = state.tableau;
       this.foundations = state.foundations;
@@ -230,6 +236,16 @@ export class HomePage implements OnInit {
     if (topCard) {
       this.onDragStart(event, [topCard], this.waste);
     }
+  }
+
+  toggleDarkMode() {
+    this.isDarkMode = !this.isDarkMode;
+    this.applyTheme();
+    localStorage.setItem('solitaire-theme', this.isDarkMode ? 'dark' : 'light');
+  }
+
+  private applyTheme() {
+    document.body.classList.toggle('dark-theme', this.isDarkMode);
   }
 
   showHint() {
